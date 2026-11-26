@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Attack Detector — Отчёт</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e2f 0%, #2d2d44 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        header h1 {
+            font-size: 2.2rem;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+        header h1 span {
+            color: #ff4d6d;
+        }
+        header p {
+            color: #8888aa;
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: #ff4d6d;
+        }
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ff4d6d;
+        }
+        .stat-card .label {
+            margin-top: 0.4rem;
+            font-size: 0.85rem;
+            color: #aaaacc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .section-title {
+            font-size: 1.3rem;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(255, 77, 109, 0.4);
+        }
+        .table-wrap {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            background: rgba(255, 77, 109, 0.15);
+            color: #ff8fa3;
+            text-align: left;
+            padding: 0.9rem 1rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        td {
+            padding: 0.8rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: #d0d0e0;
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-sqli { background: #ff4d6d33; color: #ff8fa3; }
+        .badge-xss  { background: #ffb84d33; color: #ffcf7a; }
+        .badge-traversal { background: #4d9fff33; color: #8fc2ff; }
+        .badge-brute { background: #a64dff33; color: #c99aff; }
+        .badge-default { background: #4dffa633; color: #8affc2; }
+        .empty, .error {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #8888aa;
+            font-size: 1rem;
+        }
+        .error { color: #ff6b6b; }
+        .loader {
+            text-align: center;
+            padding: 3rem;
+            color: #8888aa;
+        }
+        .loader::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 40px;
+            margin: 1rem auto 0;
+            border: 3px solid rgba(255, 77, 109, 0.2);
+            border-top-color: #ff4d6d;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        footer {
+            text-align: center;
+            color: #555577;
+            font-size: 0.8rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Web <span>Attack</span> Detector</h1>
+            <p>Результаты анализа логов веб-сервера</p>
+        </header>
+
+        <div id="app">
+            <div class="loader">Загрузка отчёта...</div>
+        </div>
+
+        <footer>Отчёт сгенерирован из report.json</footer>
+    </div>
+
+    <script>
+        const app = document.getElementById('app');
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function badgeClass(type) {
+            const t = String(type || '').toLowerCase();
+            if (t.includes('sql')) return 'badge-sqli';
+            if (t.includes('xss')) return 'badge-xss';
+            if (t.includes('traversal') || t.includes('path')) return 'badge-traversal';
+            if (t.includes('brute') || t.includes('login')) return 'badge-brute';
+            return 'badge-default';
+        }
+
+        function render(report) {
+            // Пытаемся понять структуру отчёта
+            let attacks = [];
+            let summary = {};
+
+            if (Array.isArray(report)) {
+                attacks = report;
+            } else if (report && typeof report === 'object') {
+                // Ищем массив с атаками
+                const candidates = ['attacks', 'detections', 'results', 'events', 'items'];
+                for (const key of candidates) {
+                    if (Array.isArray(report[key])) {
+                        attacks = report[key];
+                        break;
+                    }
+                }
+                // Сводка
+                summary = report.summary || report.stats || report;
+            }
+
+            // Считаем статистику
+            const total = attacks.length;
+            const byType = {};
+            attacks.forEach(a => {
+                const type = a.type || a.attack_type || a.category || 'unknown';
+                byType[type] = (byType[type] || 0) + 1;
+            });
+            const uniqueTypes = Object.keys(byType).length;
+
+            let html = '';
+
+            // Карточки статистики
+            html += '<div class="stats">';
+            html += `<div class="stat-card"><div class="value">${total}</div><div class="label">Всего инцидентов</div></div>`;
+            html += `<div class="stat-card"><div class="value">${uniqueTypes}</div><div class="label">Типов атак</div></div>`;
+
+            const ipCount = new Set(attacks.map(a => a.ip || a.source_ip || a.src_ip).filter(Boolean)).size;
+            if (ipCount) {
+                html += `<div class="stat-card"><div class="value">${ipCount}</div><div class="label">Уникальных IP</div></div>`;
+            }
+            html += '</div>';
+
+            // Таблица
+            if (total === 0) {
+                html += '<div class="empty">Атак не обнаружено (или файл пуст).</div>';
+            } else {
+                html += '<h2 class="section-title">Обнаруженные инциденты</h2>';
+                html += '<div class="table-wrap"><table><thead><tr>';
+                html += '<th>#</th><th>Тип</th><th>IP-адрес</th><th>URL / Детали</th><th>Время</th>';
+                html += '</tr></thead><tbody>';
+
+                attacks.slice(0, 200).forEach((a, i) => {
+                    const type = a.type || a.attack_type || a.category || '—';
+                    const ip = a.ip || a.source_ip || a.src_ip || '—';
+                    const detail = a.url || a.path || a.payload || a.details || a.message || '—';
+                    const time = a.time || a.timestamp || a.date || '—';
+
+                    html += '<tr>';
+                    html += `<td>${i + 1}</td>`;
+                    html += `<td><span class="badge ${badgeClass(type)}">${escapeHtml(type)}</span></td>`;
+                    html += `<td>${escapeHtml(ip)}</td>`;
+                    html += `<td>${escapeHtml(detail)}</td>`;
+                    html += `<td>${escapeHtml(time)}</td>`;
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table></div>';
+                if (total > 200) {
+                    html += `<p style="text-align:center;color:#8888aa;">Показаны первые 200 из ${total} записей.</p>`;
+                }
+            }
+
+            app.innerHTML = html;
+        }
+
+        // Загружаем report.json
+        fetch('report.json')
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                return res.json();
+            })
+            .then(data => render(data))
+            .catch(err => {
+                app.innerHTML = `<div class="error">
+                    Не удалось загрузить <b>report.json</b>.<br>
+                    ${escapeHtml(err.message)}<br><br>
+                    Убедитесь, что файл лежит в той же папке, что и index.html,<br>
+                    и что страница открыта через сервер (а не как file://).
+                </div>`;
+            });
+    </script>
+</body>
+</html>
