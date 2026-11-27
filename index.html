@@ -125,9 +125,28 @@
                 options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#aaa' } }, x: { ticks: { color: '#aaa' } } } }
             });
 
-            // Для круговой диаграммы (типы атак) нам нужны данные по типам. 
-            // Если их нет в JSON, мы не сможем их нарисовать. 
-            // Пока оставим заглушку или скроем, если нет данных.
+            // Код для круговой диаграммы (Типы атак)
+if (report.type_stats) {
+    const typeLabels = Object.keys(report.type_stats);
+    const typeCounts = Object.values(report.type_stats);
+    const colors = ['#ff5252', '#ffb74d', '#4fc3f7', '#81c784', '#ba68c8'];
+
+    new Chart(document.getElementById('typeChart'), {
+        type: 'doughnut',
+        data: {
+            labels: typeLabels,
+            datasets: [{
+                data: typeCounts,
+                backgroundColor: colors
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { labels: { color: '#aaa' } }
+            }
+        }
+    });
+}
         }
     </script>
 </body>
