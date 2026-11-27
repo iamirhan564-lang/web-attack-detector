@@ -79,6 +79,7 @@ report_data = {
     "date": str(datetime.datetime.now()),
     "total_attacks": sum(attack_stats.values()),
     "attack_stats": attack_stats,
+    "type_stats": type_stats,  # <--- ДОБАВЬ ВОТ ЭТУ СТРОЧКУ
     "severity_stats": severity_stats
 }
 with open("report.json", "w", encoding="utf-8") as jsonfile:
