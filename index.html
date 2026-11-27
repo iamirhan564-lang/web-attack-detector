@@ -4,226 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Attack Detector — Отчёт</title>
+    <!-- Подключаем библиотеку для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #12121c;
-            color: #e2e2f0;
-            line-height: 1.6;
-            padding: 20px;
+            background-color: #121212; color: #e0e0e0; padding: 20px;
         }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #2a2a3c;
-        }
-        header h1 {
-            font-size: 2.5rem;
-            color: #ffffff;
-        }
-        header h1 span {
-            color: #ff4d6d;
-        }
-        header p {
-            color: #8a8aab;
-            font-size: 1.1rem;
-            margin-top: 0.5rem;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        .stat-card {
-            background-color: #1e1e2d;
-            border: 1px solid #2a2a3c;
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        .stat-card .value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #ff4d6d;
-            line-height: 1.2;
-        }
-        .stat-card .label {
-            color: #8a8aab;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 0.5rem;
-        }
-        .section-title {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #ffffff;
-            border-left: 4px solid #ff4d6d;
-            padding-left: 10px;
-        }
-        .table-wrap {
-            background-color: #1e1e2d;
-            border-radius: 12px;
-            border: 1px solid #2a2a3c;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #2a2a3c;
-        }
-        th {
-            background-color: #181824;
-            color: #8a8aab;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-        }
-        tr:last-child td {
-            border-bottom: none;
-        }
-        tr:hover {
-            background-color: #252538;
-        }
-        .empty {
-            background-color: #1e1e2d;
-            border: 1px dashed #2a2a3c;
-            border-radius: 12px;
-            padding: 3rem;
-            text-align: center;
-            color: #8a8aab;
-            font-size: 1.1rem;
-        }
-        .loader {
-            width: 40px;
-            height: 40px;
-            margin: 1rem auto 0;
-            border: 3px solid rgba(255, 77, 109, 0.2);
-            border-top-color: #ff4d6d;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        footer {
-            text-align: center;
-            color: #555577;
-            font-size: 0.8rem;
-            margin-top: 2rem;
+        .container { max-width: 1000px; margin: 0 auto; background-color: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
+        h1 { color: #ff5252; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
+        .info { color: #aaa; margin-bottom: 20px; font-size: 14px; }
+        
+        /* Карточки статистики */
+        .stats-cards { display: flex; gap: 20px; margin-bottom: 20px; }
+        .card { flex: 1; background: #2d2d2d; padding: 20px; border-radius: 8px; text-align: center; border-left: 5px solid #ff5252; }
+        .card h3 { margin: 0; font-size: 14px; color: #aaa; text-transform: uppercase; }
+        .card p { margin: 10px 0 0; font-size: 28px; font-weight: bold; color: #fff; }
+
+        /* Графики */
+        .charts-row { display: flex; gap: 20px; margin-top: 30px; }
+        .chart-box { flex: 1; background: #2d2d2d; padding: 20px; border-radius: 8px; }
+        .chart-box h3 { text-align: center; color: #fff; margin-bottom: 15px; font-size: 16px; }
+
+        /* Таблица */
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+        th { background-color: #111; color: #ff5252; }
+        .danger { color: #ff5252; font-weight: bold; }
+
+        /* 📱 УПРОЩЕНИЕ ДЛЯ ТЕЛЕФОНОВ (Медиа-запрос) */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            h1 { font-size: 20px; }
+            .stats-cards { flex-direction: column; gap: 10px; }
+            .card { padding: 10px; border-left: none; border-top: 5px solid #ff5252; }
+            .card p { font-size: 22px; }
+            .charts-row { flex-direction: column; } /* Графики встают друг под другом */
+            .chart-box { display: none; } /* Можно скрыть графики на телефоне, чтобы не листать долго. Если хочешь оставить — удали эту строчку! */
+            th, td { padding: 8px; font-size: 14px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Web <span>Attack</span> Detector</h1>
-            <p>Результаты анализа логов веб-сервера</p>
-        </header>
-
-        <div id="app">
-            <div class="loader">Загрузка отчёта...</div>
+        <h1>🛡️ Кибербезопасность: Отчет об инцидентах</h1>
+        <div class="info" id="date-info">Дата генерации: загрузка...</div>
+        
+        <div class="stats-cards">
+            <div class="card"><h3>Всего атакующих IP</h3><p id="stat-ips">0</p></div>
+            <div class="card"><h3>Всего атак</h3><p id="stat-total">0</p></div>
+            <div class="card"><h3>Критичных угроз (High)</h3><p id="stat-high">0</p></div>
         </div>
 
-        <footer>Отчёт сгенерирован из report.json</footer>
+        <div class="charts-row">
+            <div class="chart-box">
+                <h3>Топ атакующих IP</h3>
+                <canvas id="ipChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Типы атак</h3>
+                <canvas id="typeChart"></canvas>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>IP-адрес нарушителя</th>
+                    <th>Количество атак</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Данные добавятся автоматически -->
+            </tbody>
+        </table>
     </div>
 
     <script>
-        const app = document.getElementById('app');
-        function escapeHtml(str) {
-            if (str === null || str === undefined) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
-        }
-
+        // Загружаем данные из report.json
         fetch('report.json')
             .then(response => response.json())
-            .then(data => render(data))
+            .then(data => renderData(data))
             .catch(error => {
-                app.innerHTML = '<div class="empty">Ошибка загрузки данных. Убедитесь, что report.json существует.</div>';
-                console.error(error);
+                document.getElementById('date-info').innerText = "Ошибка: report.json не найден.";
             });
 
-        function render(report) {
-            let total = 0;
-            let ipCount = 0;
-            let attacks = [];
-
-            if (report.attack_stats) {
-                total = report.total_attacks || 0;
-                const ips = Object.keys(report.attack_stats);
-                ipCount = ips.length;
-
-                for (const ip of ips) {
-                    attacks.push({
-                        ip: ip,
-                        count: report.attack_stats[ip]
-                    });
-                }
-            } 
-
-            let html = '';
-
-            html += '<div class="stats">';
-            html += `<div class="stat-card"><div class="value">${total}</div><div class="label">Всего инцидентов</div></div>`;
-            html += `<div class="stat-card"><div class="value">${ipCount}</div><div class="label">Уникальных IP</div></div>`;
+        function renderData(report) {
+            // Заполняем текстовые данные
+            document.getElementById('date-info').innerText = "Дата генерации: " + (report.date || "неизвестно");
             
-            if (report.severity_stats && report.severity_stats.High !== undefined) {
-                html += `<div class="stat-card"><div class="value" style="color: #ff4d6d;">${report.severity_stats.High}</div><div class="label">Критических атак</div></div>`;
-            }
-            html += '</div>';
+            const attackStats = report.attack_stats || {};
+            const severityStats = report.severity_stats || {};
+            
+            const ips = Object.keys(attackStats);
+            const counts = Object.values(attackStats);
+            
+            document.getElementById('stat-ips').innerText = ips.length;
+            document.getElementById('stat-total').innerText = report.total_attacks || 0;
+            document.getElementById('stat-high').innerText = severityStats.High || 0;
 
-            if (total === 0 || attacks.length === 0) {
-                html += '<div class="empty">Атак не обнаружено (или файл пуст).</div>';
-            } else {
-                html += '<h2 class="section-title">Статистика по IP-адресам</h2>';
-                html += '<div class="table-wrap"><table><thead><tr>';
-                html += '<th>#</th><th>IP-адрес нарушителя</th><th>Количество атак</th><th>Уровень риска</th>';
-                html += '</tr></thead><tbody>';
+            // Заполняем таблицу
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            
+            // Сортируем IP по количеству атак (от большего)
+            let sorted = ips.map((ip, i) => ({ip: ip, count: counts[i]})).sort((a,b) => b.count - a.count);
+            
+            sorted.forEach(item => {
+                tbody.innerHTML += `<tr><td>${item.ip}</td><td class="danger">${item.count}</td></tr>`;
+            });
 
-                attacks.sort((a, b) => (b.count || 0) - (a.count || 0));
+            // Рисуем графики (Chart.js)
+            new Chart(document.getElementById('ipChart'), {
+                type: 'bar',
+                data: {
+                    labels: ips,
+                    datasets: [{ label: 'Атак', data: counts, backgroundColor: '#ff5252' }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#aaa' } }, x: { ticks: { color: '#aaa' } } } }
+            });
 
-                attacks.forEach((a, i) => {
-                    let riskLabel = "Низкий";
-                    let riskColor = "#4fc3f7";
-                    
-                    if (a.count > 10) {
-                        riskLabel = "Высокий";
-                        riskColor = "#ff4d6d";
-                    } else if (a.count > 5) {
-                        riskLabel = "Средний";
-                        riskColor = "#ffb74d";
-                    }
-
-                    html += '<tr>';
-                    html += `<td>${i + 1}</td>`;
-                    html += `<td><strong>${escapeHtml(a.ip)}</strong></td>`;
-                    html += `<td>${a.count || 0}</td>`;
-                    html += `<td><span style="color: ${riskColor}; font-weight: bold;">${riskLabel}</span></td>`;
-                    html += '</tr>';
-                });
-
-                html += '</tbody></table></div>';
-            }
-
-            app.innerHTML = html;
+            // Для круговой диаграммы (типы атак) нам нужны данные по типам. 
+            // Если их нет в JSON, мы не сможем их нарисовать. 
+            // Пока оставим заглушку или скроем, если нет данных.
         }
     </script>
 </body>
