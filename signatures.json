@@ -1,0 +1,22 @@
+{
+    "SQL-инъекция": {
+        "patterns": ["(?i)union\\s+select", "(?i)or\\s+1=1", "(?i)drop\\s+table"],
+        "severity": "High"
+    },
+    "XSS-атака (скрипт)": {
+        "patterns": ["(?i)<script", "(?i)javascript:", "(?i)onerror\\s*="],
+        "severity": "High"
+    },
+    "Path Traversal": {
+        "patterns": ["\\.\\./", "(?i)etc/passwd"],
+        "severity": "Medium"
+    },
+    "Сканирование уязвимостей": {
+        "patterns": ["(?i)/admin", "(?i)/\\.git", "(?i)/wp-login"],
+        "severity": "Low"
+    },
+    "Хакерский инструмент": {
+        "patterns": ["(?i)sqlmap", "(?i)nmap", "(?i)nikto"],
+        "severity": "High"
+    }
+}
