@@ -1,0 +1,15 @@
+=== РЕКОМЕНДАЦИИ ПО БЛОКИРОВКЕ IP ===
+
+Для Windows (выполнить в cmd от админа):
+netsh advfirewall firewall add rule name="Block 192.241.221.5" dir=in action=block remoteip=192.241.221.5
+netsh advfirewall firewall add rule name="Block 45.55.12.99" dir=in action=block remoteip=45.55.12.99
+netsh advfirewall firewall add rule name="Block 203.0.113.42" dir=in action=block remoteip=203.0.113.42
+netsh advfirewall firewall add rule name="Block 198.51.100.7" dir=in action=block remoteip=198.51.100.7
+netsh advfirewall firewall add rule name="Block 85.12.34.56" dir=in action=block remoteip=85.12.34.56
+
+Для Linux (iptables):
+iptables -A INPUT -s 192.241.221.5 -j DROP
+iptables -A INPUT -s 45.55.12.99 -j DROP
+iptables -A INPUT -s 203.0.113.42 -j DROP
+iptables -A INPUT -s 198.51.100.7 -j DROP
+iptables -A INPUT -s 85.12.34.56 -j DROP

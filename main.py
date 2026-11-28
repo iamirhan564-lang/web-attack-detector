@@ -88,5 +88,18 @@ report_data = {
 with open("report.json", "w", encoding="utf-8") as jsonfile:
     json.dump(report_data, jsonfile, ensure_ascii=False, indent=4)
 
+# --- СОХРАНЯЕМ СПИСОК ДЛЯ БЛОКИРОВКИ ---
+with open("blocklist.txt", "w", encoding="utf-8") as blockfile:
+    blockfile.write("=== РЕКОМЕНДАЦИИ ПО БЛОКИРОВКЕ IP ===\n\n")
+    blockfile.write("Для Windows (выполнить в cmd от админа):\n")
+    for ip in attack_stats.keys():
+        blockfile.write(f'netsh advfirewall firewall add rule name="Block {ip}" dir=in action=block remoteip={ip}\n')
+    
+    blockfile.write("\nДля Linux (iptables):\n")
+    for ip in attack_stats.keys():
+        blockfile.write(f"iptables -A INPUT -s {ip} -j DROP\n")
+
+print("💾 Создан файл blocklist.txt с командами для блокировки!")
+
 print("💾 Данные сохранены в report.csv и report.json")
 print("✅ Работа завершена.")
