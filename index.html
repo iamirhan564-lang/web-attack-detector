@@ -16,14 +16,6 @@
         h1 { color: #ff5252; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
         .info { color: #aaa; margin-bottom: 20px; font-size: 14px; }
 
-        <h1>🛡️ Кибербезопасность: Отчет об инцидентах</h1>
-
-        <!-- БЛОК С QR-КОДОМ -->
-        <div style="text-align: center; margin-bottom: 20px;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://iamirhan564-lang.github.io/web-attack-detector/" alt="QR Code" style="border-radius: 10px; border: 2px solid #ff5252;">
-            <p style="color: #888; font-size: 12px; margin-top: 5px;">Отсканируйте для доступа с телефона</p>
-        </div>
-
         /* Карточки статистики */
         .stats-cards { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
         .card { flex: 1; min-width: 200px; background: #2d2d2d; padding: 20px; border-radius: 8px; text-align: center; border-left: 5px solid #ff5252; }
@@ -61,6 +53,13 @@
 <body>
     <div class="container">
         <h1>🛡️ Кибербезопасность: Отчет об инцидентах</h1>
+        
+        <!-- БЛОК С QR-КОДОМ (теперь он на своем месте) -->
+        <div style="text-align: center; margin-bottom: 20px; margin-top: 15px;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://iamirhan564-lang.github.io/web-attack-detector/" alt="QR Code" style="border-radius: 10px; border: 2px solid #ff5252;">
+            <p style="color: #888; font-size: 12px; margin-top: 5px;">Отсканируйте для доступа с телефона</p>
+        </div>
+
         <div class="info" id="date-info">Дата генерации: загрузка...</div>
 
         <div class="stats-cards">
@@ -78,7 +77,7 @@
                 <h3>Типы атак</h3>
                 <canvas id="typeChart"></canvas>
             </div>
-        </div>
+            </div>
 
         <div class="table-wrap">
             <table>
@@ -93,12 +92,11 @@
                 <tbody id="table-body">
                     <!-- Данные добавятся автоматически -->
                 </tbody>
-                </table>
+            </table>
         </div>
     </div>
 
     <script>
-        // Загружаем данные из report.json
         fetch('report.json')
             .then(response => response.json())
             .then(data => renderData(data))
@@ -108,7 +106,6 @@
             });
 
         function renderData(report) {
-            // Заполняем текстовые данные
             document.getElementById('date-info').innerText = "Дата генерации: " + (report.date || "неизвестно");
             
             const attackStats = report.attack_stats || {};
@@ -120,7 +117,6 @@
             document.getElementById('stat-total').innerText = report.total_attacks || 0;
             document.getElementById('stat-high').innerText = severityStats.High || 0;
 
-            // Заполняем таблицу детальными данными
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
             
@@ -130,7 +126,6 @@
                     if (item.severity === 'High') riskClass = 'risk-high';
                     if (item.severity === 'Medium') riskClass = 'risk-medium';
 
-                    // Обрезаем сырой лог, если он слишком длинный
                     let shortLog = item.raw_log;
                     if (shortLog.length > 70) shortLog = shortLog.substring(0, 70) + '...';
 
@@ -145,9 +140,6 @@
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Атак не обнаружено.</td></tr>';
             }
 
-            // --- РИСУЕМ ГРАФИКИ (Chart.js) ---
-            
-            // 1. Столбчатая диаграмма (по IP)
             const ipLabels = Object.keys(attackStats);
             const ipData = Object.values(attackStats);
             
@@ -163,7 +155,6 @@
                 }
             });
 
-            // 2. Кольцевая диаграмма (по типам атак)
             const typeLabels = Object.keys(typeStats);
             const typeData = Object.values(typeStats);
             const colors = ['#ff5252', '#ffb74d', '#4fc3f7', '#81c784', '#ba68c8'];
